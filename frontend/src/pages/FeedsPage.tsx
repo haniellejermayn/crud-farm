@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Package, Utensils } from "lucide-react";
+import { Package, Plus, Utensils } from "lucide-react";
 import { feedsApi, animalsApi } from "../api/client";
 import { PageHeader } from "../components/common/PageHeader";
 import {
@@ -124,16 +124,16 @@ export const FeedsPage: React.FC = () => {
           icon={Package}
         >
           <button
-            onClick={handleOpenAddStock}
+            onClick={() => setIsFeedModalOpen(true)}
             className="bg-white border border-sage-300 text-sage-700 hover:bg-sage-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
           >
-            <Package className="h-4 w-4" /> Restock
+            <Utensils className="h-4 w-4" /> Feed Animal
           </button>
           <button
-            onClick={() => setIsFeedModalOpen(true)}
+            onClick={handleOpenAddStock}
             className="bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
           >
-            <Utensils className="h-4 w-4" /> Feed Animal
+            <Plus className="h-4 w-4" /> Add New Feed
           </button>
         </PageHeader>
 
