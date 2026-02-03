@@ -5,10 +5,8 @@ interface PageHeaderProps {
   title: string;
   subtitle: string;
   icon: LucideIcon;
-  // Make these optional so we can use custom buttons instead
   actionLabel?: string;
   onAction?: () => void;
-  // Allow passing custom buttons
   children?: React.ReactNode;
 }
 
@@ -31,10 +29,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Render custom buttons (like in Feeds Page) */}
         {children}
-
-        {/* Render default button (like in Animals/Farmers Page) */}
         {actionLabel && onAction && (
           <button
             onClick={onAction}

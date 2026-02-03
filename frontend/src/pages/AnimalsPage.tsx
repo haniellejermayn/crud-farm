@@ -30,7 +30,6 @@ export const AnimalsPage: React.FC = () => {
     fetchAnimals();
   }, []);
 
-  // --- Handlers ---
   const handleOpenCreate = () => {
     setEditingAnimal(null);
     setIsModalOpen(true);

@@ -25,9 +25,7 @@ export const farmersApi = {
   delete: (id: number) => api.delete(`/farmers/${id}`),
 };
 
-// UPDATED FEEDS API
 export const feedsApi = {
-  // Inventory
   getAllStock: () => api.get("/feeds/stock"),
   addStock: (data: { name: string; quantity: number }) =>
     api.post("/feeds/stock", data),
@@ -35,14 +33,12 @@ export const feedsApi = {
     api.patch(`/feeds/stock/${id}`, data),
   deleteStock: (id: number) => api.delete(`/feeds/stock/${id}`),
 
-  // Actions
   feedAnimal: (data: {
     animalId: number;
     feedStockId: number;
     amount: number;
   }) => api.post("/feeds/feed-animal", data),
 
-  // History
   getHistory: () => api.get("/feeds/history"),
   deleteLog: (id: number) => api.delete(`/feeds/history/${id}`),
 };

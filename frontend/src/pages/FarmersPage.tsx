@@ -30,7 +30,6 @@ export const FarmersPage: React.FC = () => {
     fetchFarmers();
   }, []);
 
-  // --- Handlers ---
   const handleOpenCreate = () => {
     setEditingFarmer(null);
     setIsModalOpen(true);

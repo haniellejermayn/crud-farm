@@ -6,7 +6,7 @@ interface AddStockModalProps {
   onClose: () => void;
   onSubmit: (data: { name: string; quantity: number }) => Promise<void>;
   initialData?: FeedStock | null;
-  isOpen?: boolean; // Added isOpen prop to trigger useEffect
+  isOpen?: boolean;
 }
 
 export const AddStockModal: React.FC<AddStockModalProps> = ({

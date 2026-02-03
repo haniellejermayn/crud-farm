@@ -21,11 +21,8 @@ export const FeedsPage: React.FC = () => {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Modal States
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [isFeedModalOpen, setIsFeedModalOpen] = useState(false);
-
-  // Edit State
   const [editingStock, setEditingStock] = useState<FeedStock | null>(null);
 
   const fetchData = async () => {
@@ -50,7 +47,6 @@ export const FeedsPage: React.FC = () => {
     fetchData();
   }, []);
 
-  // --- Handlers: Stock ---
   const handleOpenAddStock = () => {
     setEditingStock(null);
     setIsStockModalOpen(true);
@@ -96,7 +92,6 @@ export const FeedsPage: React.FC = () => {
     }
   };
 
-  // --- Handlers: Actions ---
   const handleFeedAnimal = async (data: {
     animalId: number;
     feedStockId: number;
@@ -150,9 +145,9 @@ export const FeedsPage: React.FC = () => {
       </div>
 
       {/* Main Content Grid (Takes remaining height) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow overflow-hidden pb-6">
-        {/* Left: Inventory (1/3 width) */}
-        <div className="lg:col-span-1 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-grow overflow-hidden pb-6">
+        {/* Left: Inventory*/}
+        <div className="lg:col-span-2 h-full">
           <FeedStockTable
             stock={stock}
             isLoading={isLoading}
@@ -161,8 +156,8 @@ export const FeedsPage: React.FC = () => {
           />
         </div>
 
-        {/* Right: History (2/3 width) */}
-        <div className="lg:col-span-2 h-full">
+        {/* Right: History */}
+        <div className="lg:col-span-3 h-full">
           <FeedingLogTable
             logs={logs}
             isLoading={isLoading}

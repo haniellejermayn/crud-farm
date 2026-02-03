@@ -1,7 +1,6 @@
 import React from "react";
 import { Trash2, Pencil, HeartPulse, AlertCircle, Beef } from "lucide-react";
 
-// Define the Interface here or in a types file
 export interface Animal {
   id: number;
   name: string;

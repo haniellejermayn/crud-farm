@@ -30,11 +30,10 @@ export const Dashboard: React.FC = () => {
     const fetchStats = async () => {
       setIsLoading(true);
       try {
-        // Removed Plants API call
         const [animals, farmers, feeds, tasks] = await Promise.all([
           animalsApi.getAll(),
           farmersApi.getAll(),
-          feedsApi.getAllStock(), // Assuming you updated this to use stock
+          feedsApi.getAllStock(),
           tasksApi.getAll(),
         ]);
 
@@ -44,7 +43,7 @@ export const Dashboard: React.FC = () => {
           feeds: feeds.data.reduce(
             (acc: number, item: FeedStock) => acc + item.quantity,
             0,
-          ), // Sum up quantity
+          ),
           tasks: tasks.data.length,
         });
       } catch (error) {
@@ -105,7 +104,7 @@ export const Dashboard: React.FC = () => {
           </h3>
 
           {isLoading
-            ? Array(4) // Only 4 skeletons now
+            ? Array(4)
                 .fill(0)
                 .map((_, i) => (
                   <div

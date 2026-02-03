@@ -71,12 +71,10 @@ export const FarmersTable: React.FC<FarmersTableProps> = ({
                     #{farmer.id}
                   </td>
 
-                  {/* Name: Plain text, no avatar */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {farmer.name}
                   </td>
 
-                  {/* Role: Plain text, no badge */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {farmer.role}
                   </td>
