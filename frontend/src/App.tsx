@@ -2,8 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import { Dashboard } from "./pages/Dashboard";
-import { AnimalList } from "./pages/animals/AnimalList";
-// Import other list and form components as you create them
+import { AnimalsPage } from "./pages/AnimalsPage";
 
 function App() {
   return (
@@ -11,7 +10,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/animals" element={<AnimalList />} />
+          <Route path="/animals" element={<AnimalsPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

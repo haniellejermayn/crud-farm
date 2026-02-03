@@ -13,6 +13,12 @@ export class Animal {
   @Column()
   type: string;
 
+  @Column({ nullable: true })
+  age: number;
+
+  @Column({ default: 'Female' })
+  gender: string;
+
   @Column({ default: true })
   isHealthy: boolean;
 

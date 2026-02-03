@@ -22,4 +22,14 @@ export class AnimalsService {
     const animal = this.animalRepository.create(createAnimalDto);
     return this.animalRepository.save(animal);
   }
+
+  async update(id: number, updateAnimalDto: any) {
+    await this.animalRepository.update(id, updateAnimalDto);
+    return this.findOne(id);
+  }
+
+  async remove(id: number) {
+    await this.animalRepository.delete(id);
+    return { deleted: true };
+  }
 }

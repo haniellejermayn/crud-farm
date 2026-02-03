@@ -18,7 +18,6 @@ export class TasksService {
       dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
       farmerId: createTaskDto.farmerId ?? null,
       animalId: createTaskDto.animalId ?? null,
-      plantId: createTaskDto.plantId ?? null,
     } as Task);
 
     return this.taskRepository.save(newTask);
