@@ -3,5 +3,4 @@ export class CreateTaskDto {
   dueDate?: Date;
   farmerId?: number;
   animalId?: number;
-  plantId?: number;
 }

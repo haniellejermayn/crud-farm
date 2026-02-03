@@ -86,13 +86,13 @@ export const FeedStockTable: React.FC<FeedStockTableProps> = ({
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onEdit(item)}
-                        className="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
+                        className="text-gray-400 hover:text-blue-600 p-1 rounded transition-colors"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDelete(item.id)}
-                        className="text-gray-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors"
+                        className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
