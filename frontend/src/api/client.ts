@@ -9,16 +9,14 @@ export const api = axios.create({
   },
 });
 
-// animals
 export const animalsApi = {
   getAll: () => api.get("/animals"),
   getOne: (id: number) => api.get(`/animals/${id}`),
   create: (data: unknown) => api.post("/animals", data),
-  update: (id: number, data: unknown) => api.put(`/animals/${id}`, data),
+  update: (id: number, data: unknown) => api.patch(`/animals/${id}`, data),
   delete: (id: number) => api.delete(`/animals/${id}`),
 };
 
-// farmers
 export const farmersApi = {
   getAll: () => api.get("/farmers"),
   getOne: (id: number) => api.get(`/farmers/${id}`),
@@ -27,25 +25,28 @@ export const farmersApi = {
   delete: (id: number) => api.delete(`/farmers/${id}`),
 };
 
-// feeds
+// UPDATED FEEDS API
 export const feedsApi = {
-  // inventory
+  // Inventory
   getAllStock: () => api.get("/feeds/stock"),
   addStock: (data: { name: string; quantity: number }) =>
     api.post("/feeds/stock", data),
+  updateStock: (id: number, data: unknown) =>
+    api.patch(`/feeds/stock/${id}`, data),
+  deleteStock: (id: number) => api.delete(`/feeds/stock/${id}`),
 
-  // acttions
+  // Actions
   feedAnimal: (data: {
     animalId: number;
     feedStockId: number;
     amount: number;
   }) => api.post("/feeds/feed-animal", data),
 
-  // history
+  // History
   getHistory: () => api.get("/feeds/history"),
+  deleteLog: (id: number) => api.delete(`/feeds/history/${id}`),
 };
 
-// tasks
 export const tasksApi = {
   getAll: () => api.get("/tasks"),
   getOne: (id: number) => api.get(`/tasks/${id}`),

@@ -1,13 +1,15 @@
 import React from "react";
-import type { LucideIcon } from "lucide-react";
-import { Plus } from "lucide-react";
+import { type LucideIcon, Plus } from "lucide-react";
 
 interface PageHeaderProps {
   title: string;
   subtitle: string;
   icon: LucideIcon;
-  actionLabel: string;
-  onAction: () => void;
+  // Make these optional so we can use custom buttons instead
+  actionLabel?: string;
+  onAction?: () => void;
+  // Allow passing custom buttons
+  children?: React.ReactNode;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -16,6 +18,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   icon: Icon,
   actionLabel,
   onAction,
+  children,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -26,12 +29,21 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </h1>
         <p className="text-sage-500 text-sm mt-1">{subtitle}</p>
       </div>
-      <button
-        onClick={onAction}
-        className="bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
-      >
-        <Plus className="h-4 w-4" /> {actionLabel}
-      </button>
+
+      <div className="flex items-center gap-3">
+        {/* Render custom buttons (like in Feeds Page) */}
+        {children}
+
+        {/* Render default button (like in Animals/Farmers Page) */}
+        {actionLabel && onAction && (
+          <button
+            onClick={onAction}
+            className="bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> {actionLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

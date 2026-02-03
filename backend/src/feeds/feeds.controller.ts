@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { CreateFeedStockDto } from './dto/create-stock.dto';
 import { FeedAnimalDto } from './dto/feed-animal.dto';
@@ -7,7 +15,7 @@ import { FeedAnimalDto } from './dto/feed-animal.dto';
 export class FeedsController {
   constructor(private readonly feedsService: FeedsService) {}
 
-  // Inventory Endpoints
+  // --- Inventory Endpoints ---
   @Get('stock')
   findAllStock() {
     return this.feedsService.findAllStock();
@@ -18,7 +26,17 @@ export class FeedsController {
     return this.feedsService.addStock(createStockDto);
   }
 
-  // Action Endpoints
+  @Patch('stock/:id')
+  updateStock(@Param('id') id: string, @Body() body: any) {
+    return this.feedsService.updateStock(+id, body);
+  }
+
+  @Delete('stock/:id')
+  removeStock(@Param('id') id: string) {
+    return this.feedsService.removeStock(+id);
+  }
+
+  // --- Action Endpoints ---
   @Post('feed-animal')
   feedAnimal(@Body() feedAnimalDto: FeedAnimalDto) {
     return this.feedsService.feedAnimal(feedAnimalDto);
@@ -27,5 +45,10 @@ export class FeedsController {
   @Get('history')
   getHistory() {
     return this.feedsService.getRecentLogs();
+  }
+
+  @Delete('history/:id')
+  removeLog(@Param('id') id: string) {
+    return this.feedsService.removeLog(+id);
   }
 }
