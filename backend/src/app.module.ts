@@ -7,6 +7,9 @@ import { FeedsModule } from './feeds/feeds.module';
 import { PlantsModule } from './plants/plants.module';
 import { FarmersModule } from './farmers/farmers.module';
 import { TasksModule } from './tasks/tasks.module';
+import { FeedStocksModule } from './feed-stocks/feed-stocks.module';
+import { FeedingLogsModule } from './feeding-logs/feeding-logs.module';
+import { FeedsModule } from './feeds/feeds.module';
 
 @Module({
   imports: [
@@ -25,6 +28,8 @@ import { TasksModule } from './tasks/tasks.module';
     PlantsModule,
     FarmersModule,
     TasksModule,
+    FeedStocksModule,
+    FeedingLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

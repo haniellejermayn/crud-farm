@@ -1,6 +1,3 @@
-import { Animal } from 'src/animals/entities/animal.entity';
-import { Farmer } from 'src/farmers/entities/farmer.entity';
-import { Plant } from 'src/plants/entities/plant.entity';
 import {
   Entity,
   Column,
@@ -8,6 +5,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { Farmer } from '../../farmers/entities/farmer.entity';
+import { Animal } from '../../animals/entities/animal.entity';
 
 export enum TaskStatus {
   PENDING = 'PENDING',
@@ -29,7 +28,6 @@ export class Task {
   @Column({ type: 'timestamp', nullable: true })
   dueDate?: Date;
 
-  // --- farmer ---
   @Column({ nullable: true })
   farmerId?: number;
 
@@ -37,19 +35,10 @@ export class Task {
   @JoinColumn({ name: 'farmerId' })
   farmer?: Farmer;
 
-  // --- animal ---
   @Column({ nullable: true })
   animalId?: number;
 
-  @ManyToOne(() => Animal, { nullable: true })
+  @ManyToOne(() => Animal, (animal) => animal.tasks, { nullable: true })
   @JoinColumn({ name: 'animalId' })
   animal?: Animal;
-
-  // --- plant ---
-  @Column({ nullable: true })
-  plantId?: number;
-
-  @ManyToOne(() => Plant, { nullable: true })
-  @JoinColumn({ name: 'plantId' })
-  plant?: Plant;
 }
