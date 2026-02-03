@@ -85,13 +85,13 @@ export const FarmersTable: React.FC<FarmersTableProps> = ({
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onEdit(farmer)}
-                        className="text-gray-400 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-lg"
+                        className="text-gray-400 hover:text-blue-600 transition-colors p-2 rounded-lg"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDelete(farmer.id)}
-                        className="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
+                        className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
