@@ -13,6 +13,7 @@ import {
 import { AddStockModal } from "../components/feeds/AddStockModal";
 import { FeedAnimalModal } from "../components/feeds/FeedAnimalModal";
 import { type Animal } from "../components/animals/AnimalsTable";
+import axios from "axios";
 
 export const FeedsPage: React.FC = () => {
   const [stock, setStock] = useState<FeedStock[]>([]);
@@ -69,6 +70,14 @@ export const FeedsPage: React.FC = () => {
         fetchData();
       } catch (error) {
         console.error("Failed to delete stock", error);
+
+        if (axios.isAxiosError(error) && error.response?.status === 409) {
+          alert(
+            "Cannot delete this feed because it has been used in feeding logs.\n\nPlease remove the associated feeding history first.",
+          );
+        } else {
+          alert("Failed to delete stock. Please try again.");
+        }
       }
     }
   };
