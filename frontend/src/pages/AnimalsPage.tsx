@@ -72,7 +72,7 @@ export const AnimalsPage: React.FC = () => {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-2 max-w-7xl mx-auto space-y-6">
       <PageHeader
         title="Livestock Management"
         subtitle="Manage your herd, track health, and view details."

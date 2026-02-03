@@ -1,15 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Card } from "../components/common/Card";
 import {
   Beef,
   Users,
   Package,
   ClipboardList,
-  Activity,
-  Calendar,
+  AlertTriangle,
+  TrendingUp,
   PlusCircle,
+  Calendar,
+  CheckCircle,
 } from "lucide-react";
 import { animalsApi, farmersApi, feedsApi, tasksApi } from "../api/client";
+import { type Animal, type Farmer, type Task, TaskStatus } from "../types";
+import type { Animal as AnimalsTableAnimal } from "../components/animals/AnimalsTable";
+
+// Modals
+import { AnimalFormModal } from "../components/animals/AnimalFormModal";
+import { FeedAnimalModal } from "../components/feeds/FeedAnimalModal";
+import { TaskFormModal } from "../components/tasks/TaskFormModal";
 
 interface FeedStock {
   id: number;
@@ -17,111 +26,253 @@ interface FeedStock {
   quantity: number;
 }
 
-export const Dashboard: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    animals: 0,
-    farmers: 0,
-    feeds: 0,
-    tasks: 0,
-  });
+interface FeedingLog {
+  id: number;
+  amount: number;
+  fedAt: string;
+  animal: Animal;
+  feedStock: FeedStock;
+}
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      setIsLoading(true);
-      try {
-        const [animals, farmers, feeds, tasks] = await Promise.all([
+export const Dashboard: React.FC = () => {
+  // --- State ---
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [farmers, setFarmers] = useState<Farmer[]>([]);
+  const [feeds, setFeeds] = useState<FeedStock[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [logs, setLogs] = useState<FeedingLog[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Modal Visibility State
+  const [showAnimalModal, setShowAnimalModal] = useState(false);
+  const [showFeedModal, setShowFeedModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+
+  // --- Fetch Data ---
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [animalsRes, farmersRes, feedsRes, tasksRes, logsRes] =
+        await Promise.all([
           animalsApi.getAll(),
           farmersApi.getAll(),
           feedsApi.getAllStock(),
           tasksApi.getAll(),
+          feedsApi.getHistory(),
         ]);
 
-        setStats({
-          animals: animals.data.length,
-          farmers: farmers.data.length,
-          feeds: feeds.data.reduce(
-            (acc: number, item: FeedStock) => acc + item.quantity,
-            0,
-          ),
-          tasks: tasks.data.length,
-        });
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-      } finally {
-        setTimeout(() => setIsLoading(false), 500);
-      }
-    };
+      setAnimals(animalsRes.data);
+      setFarmers(farmersRes.data);
+      setFeeds(feedsRes.data);
+      setTasks(tasksRes.data);
+      setLogs(logsRes.data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setTimeout(() => setIsLoading(false), 500);
+    }
+  };
 
-    fetchStats();
+  useEffect(() => {
+    fetchData();
   }, []);
 
+  // --- Action Handlers ---
+  const handleCreateAnimal = async (data: Omit<Animal, "id">) => {
+    try {
+      await animalsApi.create(data);
+      setShowAnimalModal(false);
+      fetchData();
+    } catch (error) {
+      console.error("Failed to create animal", error);
+    }
+  };
+
+  const handleFeedAnimal = async (data: {
+    animalId: number;
+    feedStockId: number;
+    amount: number;
+  }) => {
+    try {
+      await feedsApi.feedAnimal(data);
+      setShowFeedModal(false);
+      fetchData();
+    } catch (error) {
+      console.error("Failed to feed animal", error);
+    }
+  };
+
+  const handleCreateTask = async (data: unknown) => {
+    try {
+      await tasksApi.create(data);
+      setShowTaskModal(false);
+      fetchData();
+    } catch (error) {
+      console.error("Failed to create task", error);
+    }
+  };
+
+  // --- Metrics & Insights Calculation ---
+  const stats = useMemo(() => {
+    const totalFeedQuantity = feeds.reduce(
+      (acc, item) => acc + item.quantity,
+      0,
+    );
+    return {
+      animals: animals.length,
+      farmers: farmers.length,
+      feeds: totalFeedQuantity,
+      tasks: tasks.filter((t) => t.status !== TaskStatus.COMPLETED).length,
+    };
+  }, [animals, farmers, feeds, tasks]);
+
+  const insights = useMemo(() => {
+    // Low Stock Alerts (Feeds with quantity < 20)
+    const lowStock = feeds.filter((f) => f.quantity < 20);
+
+    // Urgent Tasks (Pending, sorted by due date, due within 7 days)
+    const pendingTasks = tasks
+      .filter(
+        (t) =>
+          t.status === TaskStatus.PENDING &&
+          t.dueDate &&
+          new Date(t.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      )
+      .sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      })
+      .slice(0, 3);
+
+    // Trends (from recent logs)
+    const animalConsumption: Record<string, number> = {};
+    const feedUsage: Record<string, number> = {};
+
+    logs.forEach((log) => {
+      if (log.animal) {
+        const name = log.animal.name;
+        animalConsumption[name] = (animalConsumption[name] || 0) + log.amount;
+      }
+      if (log.feedStock) {
+        const name = log.feedStock.name;
+        feedUsage[name] = (feedUsage[name] || 0) + log.amount;
+      }
+    });
+
+    // Most Productive Employee (Most Completed Tasks)
+    const farmerCompletions: Record<string, number> = {};
+    tasks
+      .filter((t) => t.status === TaskStatus.COMPLETED)
+      .forEach((t) => {
+        const name = t.farmer?.name || "Unassigned";
+        farmerCompletions[name] = (farmerCompletions[name] || 0) + 1;
+      });
+
+    const mostFedAnimal = Object.entries(animalConsumption).sort(
+      ([, a], [, b]) => b - a,
+    )[0];
+    const mostUsedFeed = Object.entries(feedUsage).sort(
+      ([, a], [, b]) => b - a,
+    )[0];
+    const topEmployee = Object.entries(farmerCompletions).sort(
+      ([, a], [, b]) => b - a,
+    )[0];
+
+    return { lowStock, pendingTasks, mostFedAnimal, mostUsedFeed, topEmployee };
+  }, [feeds, tasks, logs]);
+
   const statCards = [
-    { label: "Total Animals", value: stats.animals, icon: Beef },
-    { label: "Active Farmers", value: stats.farmers, icon: Users },
-    { label: "Feed Stock (kg)", value: stats.feeds, icon: Package },
-    { label: "Pending Tasks", value: stats.tasks, icon: ClipboardList },
+    {
+      label: "Total Animals",
+      value: stats.animals,
+      icon: Beef,
+    },
+    {
+      label: "Active Farmers",
+      value: stats.farmers,
+      icon: Users,
+    },
+    {
+      label: "Feed Stock (kg)",
+      value: stats.feeds,
+      icon: Package,
+    },
+    {
+      label: "Urgent Tasks (due in 7 days)",
+      value: stats.tasks,
+      icon: ClipboardList,
+    },
   ];
 
   const quickActions = [
-    { label: "Add Animal", icon: Beef, onClick: () => {} },
-    { label: "Feed Animal", icon: Package, onClick: () => {} },
-    { label: "Create Task", icon: ClipboardList, onClick: () => {} },
+    {
+      label: "Add Animal",
+      icon: Beef,
+      onClick: () => setShowAnimalModal(true),
+    },
+    {
+      label: "Feed Animal",
+      icon: Package,
+      onClick: () => setShowFeedModal(true),
+    },
+    {
+      label: "Create Task",
+      icon: ClipboardList,
+      onClick: () => setShowTaskModal(true),
+    },
   ];
 
+  const hasLowStock = insights.lowStock.length > 0;
+
   return (
-    <div className="p-2 max-w-7xl mx-auto space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-sage-900 tracking-tight">
-            Farm Demo
-          </h1>
-          <p className="text-sage-500 text-sm mt-1 flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        </div>
-        <div>
-          <button className="bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all flex items-center gap-2">
-            <Activity className="h-4 w-4" /> Generate Report
-          </button>
-        </div>
-      </div>
-
-      <div className="border-t border-gray-200" />
-
+    <div className="p-2 max-w-7xl mx-auto space-y-8">
+      {/* Main Grid Layout - Header is now in the Left Column */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* LEFT COLUMN: Stats */}
-        <div className="lg:col-span-1 space-y-4 lg:border-r lg:border-gray-200 lg:pr-8">
-          <h3 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-2">
-            Overview
-          </h3>
+        {/* LEFT COLUMN: Header & Stats Overview */}
+        <div className="lg:col-span-1 space-y-6 lg:border-r lg:border-gray-200 lg:pr-8 flex flex-col h-full">
+          {/* Header Section (Moved Here) */}
+          <div>
+            <h1 className="text-2xl font-bold text-sage-900 tracking-tight">
+              Farm Dashboard
+            </h1>
+            <p className="text-sage-500 text-sm mt-1 flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
 
-          {isLoading
-            ? Array(4)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-16 bg-gray-100 animate-pulse rounded-xl border border-gray-200"
-                  />
-                ))
-            : statCards.map((stat) => {
-                const Icon = stat.icon;
-                return (
+          <div className="border-t border-gray-200" />
+
+          {/* Stats Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-2">
+              Overview
+            </h3>
+
+            {isLoading
+              ? Array(4)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-16 bg-gray-100 animate-pulse rounded-xl border border-gray-200"
+                    />
+                  ))
+              : statCards.map((stat) => (
                   <Card
                     key={stat.label}
                     className="group transition-all duration-200 border-gray-200"
                   >
                     <div className="flex items-center p-1">
-                      <div className="bg-sage-50 text-sage-600 p-2 rounded-lg group-hover:bg-sage-100 transition-colors">
-                        <Icon className="h-5 w-5" />
+                      <div className="p-2 rounded-lg bg-sage-50 text-sage-600 transition-colors">
+                        <stat.icon className="h-5 w-5" />
                       </div>
                       <span className="ml-3 text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">
                         {stat.label}
@@ -131,18 +282,18 @@ export const Dashboard: React.FC = () => {
                       </span>
                     </div>
                   </Card>
-                );
-              })}
+                ))}
 
-          <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs text-sage-600 font-medium">
-              System Online
-            </span>
+            <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-xs text-sage-600 font-medium">
+                System Online
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Actions & Activity */}
+        {/* RIGHT COLUMN: Actions & Insights (Occupies 3 columns) */}
         <div className="lg:col-span-3 space-y-8">
           {/* Quick Actions */}
           <div>
@@ -154,15 +305,17 @@ export const Dashboard: React.FC = () => {
                 <button
                   key={action.label}
                   onClick={action.onClick}
-                  className="bg-white border border-gray-200 hover:border-sage-500 hover:ring-1 hover:ring-sage-500 p-4 rounded-xl transition-all duration-200 flex items-center justify-between group shadow-sm"
+                  className="bg-white border border-gray-200 hover:border-sage-500 hover:ring-1 hover:ring-sage-500 p-4 rounded-xl transition-all duration-200 flex items-center justify-between group shadow-sm text-left"
                 >
                   <div className="flex items-center gap-3">
                     <div className="bg-sage-50 text-sage-600 p-2 rounded-lg group-hover:bg-sage-600 group-hover:text-white transition-colors">
                       <action.icon className="h-5 w-5" />
                     </div>
-                    <span className="font-semibold text-gray-700 group-hover:text-sage-900">
-                      {action.label}
-                    </span>
+                    <div>
+                      <span className="block font-semibold text-gray-700 group-hover:text-sage-900">
+                        {action.label}
+                      </span>
+                    </div>
                   </div>
                   <PlusCircle className="h-5 w-5 text-gray-300 group-hover:text-sage-500 transition-colors" />
                 </button>
@@ -172,31 +325,190 @@ export const Dashboard: React.FC = () => {
 
           <div className="border-t border-gray-200" />
 
-          {/* Recent Activity */}
+          {/* Farm Insights Section */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-sage-500 uppercase tracking-wider">
-                Recent Activity
-              </h3>
-              <button className="text-sm text-sage-600 hover:text-sage-800 hover:underline">
-                View History
-              </button>
-            </div>
-
-            <Card className="min-h-[300px] flex flex-col">
-              <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 rounded-lg m-4">
-                <div className="bg-gray-50 p-4 rounded-full mb-3">
-                  <Activity className="h-6 w-6 text-gray-400" />
+            <h3 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-4">
+              Farm Insights
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Card 1: Priority Tasks */}
+              <Card className="p-0 overflow-hidden border-gray-200 h-full flex flex-col">
+                <div className="p-4 border-b border-gray-100 bg-sage-50/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-sage-600" />
+                    <h4 className="font-semibold text-gray-900">
+                      Pending Tasks
+                    </h4>
+                  </div>
+                  <span className="text-xs font-medium bg-white px-2 py-1 rounded-full border border-gray-200 shadow-sm text-sage-600">
+                    {stats.tasks} Pending
+                  </span>
                 </div>
-                <p className="text-gray-900 font-medium">No recent activity</p>
-                <p className="text-gray-500 text-sm mt-1">
-                  Actions taken on the farm will be logged here.
-                </p>
+                <div className="divide-y divide-gray-100 flex-1">
+                  {insights.pendingTasks.length > 0 ? (
+                    insights.pendingTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="mt-1 h-2 w-2 rounded-full bg-sage-400 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {task.title}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            Due:{" "}
+                            {task.dueDate
+                              ? new Date(task.dueDate).toLocaleDateString()
+                              : "No date"}{" "}
+                            • {task.farmer?.name || "Unassigned"}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-gray-500 text-sm italic">
+                      No urgent tasks. Good job!
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              {/* Card 2: Metrics & Alerts */}
+              <div className="space-y-6 flex flex-col h-full">
+                {/* Inventory Status (Dynamic Color) */}
+                <Card
+                  className={`p-4 border-l-4 shadow-sm border-y border-r border-gray-200 ${
+                    hasLowStock ? "border-l-red-500" : "border-l-sage-500"
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`p-2 rounded-full shrink-0 ${
+                        hasLowStock
+                          ? "bg-red-50 text-red-600"
+                          : "bg-sage-50 text-sage-600"
+                      }`}
+                    >
+                      {hasLowStock ? (
+                        <AlertTriangle className="h-5 w-5" />
+                      ) : (
+                        <Package className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">
+                        {hasLowStock ? "Low Stock Alerts" : "Inventory Status"}
+                      </h4>
+                      {hasLowStock ? (
+                        <ul className="mt-2 space-y-1">
+                          {insights.lowStock.map((s) => (
+                            <li
+                              key={s.id}
+                              className="text-sm text-red-600 flex items-center gap-2"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                              {s.name}: {s.quantity}kg left
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3 text-sage-500" />
+                          All feed stocks are sufficient.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Top Stats Grid - Updated to 3 columns to include Employee */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+                  {/* Top Eater */}
+                  <Card className="p-4 border-gray-200 bg-sage-50/30 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="h-4 w-4 text-sage-600" />
+                      <span className="text-[10px] font-bold text-sage-600 uppercase">
+                        Top Eater
+                      </span>
+                    </div>
+                    <p className="text-base font-bold text-gray-900 truncate">
+                      {insights.mostFedAnimal ? insights.mostFedAnimal[0] : "—"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {insights.mostFedAnimal
+                        ? `${insights.mostFedAnimal[1]}kg consumed`
+                        : "No data"}
+                    </p>
+                  </Card>
+
+                  {/* Most Used Feed */}
+                  <Card className="p-4 border-gray-200 bg-sage-50/30 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Package className="h-4 w-4 text-sage-600" />
+                      <span className="text-[10px] font-bold text-sage-600 uppercase">
+                        Most Used
+                      </span>
+                    </div>
+                    <p className="text-base font-bold text-gray-900 truncate">
+                      {insights.mostUsedFeed ? insights.mostUsedFeed[0] : "—"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {insights.mostUsedFeed
+                        ? `${insights.mostUsedFeed[1]}kg used`
+                        : "No data"}
+                    </p>
+                  </Card>
+
+                  {/* Most Productive Employee (New) */}
+                  <Card className="p-4 border-gray-200 bg-sage-50/30 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="h-4 w-4 text-sage-600" />
+                      <span className="text-[10px] font-bold text-sage-600 uppercase">
+                        Top Worker
+                      </span>
+                    </div>
+                    <p className="text-base font-bold text-gray-900 truncate">
+                      {insights.topEmployee ? insights.topEmployee[0] : "—"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {insights.topEmployee
+                        ? `${insights.topEmployee[1]} task(s) done`
+                        : "No data"}
+                    </p>
+                  </Card>
+                </div>
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {showAnimalModal && (
+        <AnimalFormModal
+          onClose={() => setShowAnimalModal(false)}
+          onSubmit={handleCreateAnimal}
+        />
+      )}
+
+      {showTaskModal && (
+        <TaskFormModal
+          onClose={() => setShowTaskModal(false)}
+          onSubmit={handleCreateTask}
+          farmers={farmers}
+          animals={animals}
+        />
+      )}
+
+      {showFeedModal && (
+        <FeedAnimalModal
+          onClose={() => setShowFeedModal(false)}
+          onSubmit={handleFeedAnimal}
+          animals={animals as AnimalsTableAnimal[]}
+          stocks={feeds}
+        />
+      )}
     </div>
   );
 };

@@ -119,8 +119,8 @@ export const FeedsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 h-screen flex flex-col overflow-hidden">
-      {/* Header (Non-scrolling) */}
+    <div className="p-2 max-w-7xl mx-auto space-y-6 h-screen flex flex-col overflow-hidden">
+      {/* Header */}
       <div className="flex-shrink-0">
         <PageHeader
           title="Feed Management"
