@@ -239,7 +239,7 @@ export const Dashboard: React.FC = () => {
   const hasOverdue = insights.overdueCount > 0;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
+    <div className="p-2 max-w-7xl mx-auto space-y-8">
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* LEFT COLUMN: Header & Stats Overview */}
