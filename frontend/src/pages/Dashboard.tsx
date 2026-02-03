@@ -128,25 +128,29 @@ export const Dashboard: React.FC = () => {
   }, [animals, farmers, feeds, tasks]);
 
   const insights = useMemo(() => {
-    // Low Stock Alerts (Feeds with quantity < 20)
-    const lowStock = feeds.filter((f) => f.quantity < 20);
+    // 1. Low Stock Alerts (< 50kg)
+    const lowStock = feeds.filter((f) => f.quantity < 50);
 
-    // Urgent Tasks (Pending, sorted by due date, due within 7 days)
-    const pendingTasks = tasks
-      .filter(
-        (t) =>
-          t.status === TaskStatus.PENDING &&
-          t.dueDate &&
-          new Date(t.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    // 2. Overdue Tasks (Pending + Due Date is in the past)
+    const now = new Date();
+    const allOverdue = tasks.filter((t) => {
+      // Must be pending and have a due date
+      if (t.status === TaskStatus.COMPLETED || !t.dueDate) return false;
+      // Check if due date is before now
+      return new Date(t.dueDate) < now;
+    });
+
+    const overdueCount = allOverdue.length;
+
+    // Sort oldest due date first (most overdue)
+    const overdueTasks = allOverdue
+      .sort(
+        (a, b) =>
+          new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime(),
       )
-      .sort((a, b) => {
-        if (!a.dueDate) return 1;
-        if (!b.dueDate) return -1;
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      })
       .slice(0, 3);
 
-    // Trends (from recent logs)
+    // 3. Trends (from recent logs)
     const animalConsumption: Record<string, number> = {};
     const feedUsage: Record<string, number> = {};
 
@@ -161,7 +165,7 @@ export const Dashboard: React.FC = () => {
       }
     });
 
-    // Most Productive Employee (Most Completed Tasks)
+    // 4. Most Productive Employee (Most Completed Tasks)
     const farmerCompletions: Record<string, number> = {};
     tasks
       .filter((t) => t.status === TaskStatus.COMPLETED)
@@ -180,7 +184,14 @@ export const Dashboard: React.FC = () => {
       ([, a], [, b]) => b - a,
     )[0];
 
-    return { lowStock, pendingTasks, mostFedAnimal, mostUsedFeed, topEmployee };
+    return {
+      lowStock,
+      overdueTasks,
+      overdueCount,
+      mostFedAnimal,
+      mostUsedFeed,
+      topEmployee,
+    };
   }, [feeds, tasks, logs]);
 
   const statCards = [
@@ -200,7 +211,7 @@ export const Dashboard: React.FC = () => {
       icon: Package,
     },
     {
-      label: "Urgent Tasks (due in 7 days)",
+      label: "Pending Tasks",
       value: stats.tasks,
       icon: ClipboardList,
     },
@@ -225,17 +236,18 @@ export const Dashboard: React.FC = () => {
   ];
 
   const hasLowStock = insights.lowStock.length > 0;
+  const hasOverdue = insights.overdueCount > 0;
 
   return (
-    <div className="p-2 max-w-7xl mx-auto space-y-8">
-      {/* Main Grid Layout - Header is now in the Left Column */}
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
+      {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* LEFT COLUMN: Header & Stats Overview */}
         <div className="lg:col-span-1 space-y-6 lg:border-r lg:border-gray-200 lg:pr-8 flex flex-col h-full">
-          {/* Header Section (Moved Here) */}
+          {/* Header Section */}
           <div>
             <h1 className="text-2xl font-bold text-sage-900 tracking-tight">
-              Farm Dashboard
+              Farm Demo
             </h1>
             <p className="text-sage-500 text-sm mt-1 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -293,7 +305,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Actions & Insights (Occupies 3 columns) */}
+        {/* RIGHT COLUMN: Actions & Insights */}
         <div className="lg:col-span-3 space-y-8">
           {/* Quick Actions */}
           <div>
@@ -331,32 +343,51 @@ export const Dashboard: React.FC = () => {
               Farm Insights
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Card 1: Priority Tasks */}
-              <Card className="p-0 overflow-hidden border-gray-200 h-full flex flex-col">
+              {/* Card 1: Overdue Tasks (Replaced Pending Tasks) */}
+              <Card
+                className={`p-0 overflow-hidden border-y border-r border-gray-200 shadow-sm h-full flex flex-col ${
+                  hasOverdue
+                    ? "border-l-4 border-l-red-500"
+                    : "border-l-4 border-l-sage-500"
+                }`}
+              >
                 <div className="p-4 border-b border-gray-100 bg-sage-50/50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4 text-sage-600" />
-                    <h4 className="font-semibold text-gray-900">
-                      Pending Tasks
+                    {/* Changed Icon and Text based on overdue status */}
+                    {hasOverdue ? (
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 text-sage-600" />
+                    )}
+                    <h4
+                      className={`font-semibold ${hasOverdue ? "text-red-700" : "text-gray-900"}`}
+                    >
+                      Overdue Tasks
                     </h4>
                   </div>
-                  <span className="text-xs font-medium bg-white px-2 py-1 rounded-full border border-gray-200 shadow-sm text-sage-600">
-                    {stats.tasks} Pending
+                  <span
+                    className={`text-xs font-medium px-2 py-1 rounded-full border shadow-sm ${
+                      hasOverdue
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-white text-sage-600 border-gray-200"
+                    }`}
+                  >
+                    {insights.overdueCount} Overdue
                   </span>
                 </div>
                 <div className="divide-y divide-gray-100 flex-1">
-                  {insights.pendingTasks.length > 0 ? (
-                    insights.pendingTasks.map((task) => (
+                  {insights.overdueTasks.length > 0 ? (
+                    insights.overdueTasks.map((task) => (
                       <div
                         key={task.id}
                         className="p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors"
                       >
-                        <div className="mt-1 h-2 w-2 rounded-full bg-sage-400 shrink-0" />
+                        <div className="mt-1 h-2 w-2 rounded-full bg-red-400 shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {task.title}
                           </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
+                          <p className="text-xs text-red-500 mt-0.5 font-medium">
                             Due:{" "}
                             {task.dueDate
                               ? new Date(task.dueDate).toLocaleDateString()
@@ -368,7 +399,7 @@ export const Dashboard: React.FC = () => {
                     ))
                   ) : (
                     <div className="p-8 text-center text-gray-500 text-sm italic">
-                      No urgent tasks. Good job!
+                      No overdue tasks. Great work!
                     </div>
                   )}
                 </div>
@@ -376,7 +407,7 @@ export const Dashboard: React.FC = () => {
 
               {/* Card 2: Metrics & Alerts */}
               <div className="space-y-6 flex flex-col h-full">
-                {/* Inventory Status (Dynamic Color) */}
+                {/* Inventory Status */}
                 <Card
                   className={`p-4 border-l-4 shadow-sm border-y border-r border-gray-200 ${
                     hasLowStock ? "border-l-red-500" : "border-l-sage-500"
@@ -422,7 +453,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </Card>
 
-                {/* Top Stats Grid - Updated to 3 columns to include Employee */}
+                {/* Top Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
                   {/* Top Eater */}
                   <Card className="p-4 border-gray-200 bg-sage-50/30 flex flex-col justify-center">
@@ -460,7 +491,7 @@ export const Dashboard: React.FC = () => {
                     </p>
                   </Card>
 
-                  {/* Most Productive Employee (New) */}
+                  {/* Most Productive Employee */}
                   <Card className="p-4 border-gray-200 bg-sage-50/30 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-2">
                       <Users className="h-4 w-4 text-sage-600" />
@@ -473,7 +504,7 @@ export const Dashboard: React.FC = () => {
                     </p>
                     <p className="text-xs text-gray-500">
                       {insights.topEmployee
-                        ? `${insights.topEmployee[1]} task(s) done`
+                        ? `${insights.topEmployee[1]} tasks done`
                         : "No data"}
                     </p>
                   </Card>
