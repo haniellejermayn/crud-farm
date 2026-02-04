@@ -126,6 +126,7 @@ export const useDashboardData = () => {
     feeds,
     isLoading,
     stats,
+    logs,
     insights,
     refresh: fetchData,
   };

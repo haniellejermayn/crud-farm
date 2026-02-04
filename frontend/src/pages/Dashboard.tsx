@@ -8,6 +8,7 @@ import { useDashboardData } from "../hooks/useDashboardData";
 import { DashboardSidebar } from "../components/dashboard/DashboardSidebar";
 import { QuickActions } from "../components/dashboard/QuickActions";
 import { InsightsGrid } from "../components/dashboard/InsightsGrid";
+import { FarmAnalytics } from "../components/dashboard/FarmAnalytics";
 
 // Modals
 import { AnimalFormModal } from "../components/animals/AnimalFormModal";
@@ -15,7 +16,7 @@ import { FeedAnimalModal } from "../components/feeds/FeedAnimalModal";
 import { TaskFormModal } from "../components/tasks/TaskFormModal";
 
 export const Dashboard: React.FC = () => {
-  const { animals, farmers, feeds, isLoading, stats, insights, refresh } =
+  const { animals, farmers, feeds, isLoading, stats, logs, insights, refresh } =
     useDashboardData();
 
   // Modal Visibility State
@@ -76,6 +77,9 @@ export const Dashboard: React.FC = () => {
           <div className="border-t border-gray-200" />
 
           <InsightsGrid insights={insights} />
+
+          {logs.length > 0 && <div className="border-t border-gray-200" />}
+          {logs.length > 0 && <FarmAnalytics logs={logs} />}
         </div>
       </div>
 
