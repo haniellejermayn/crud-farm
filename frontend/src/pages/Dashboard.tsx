@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card } from "../components/common/Card";
 import {
   Beef,
@@ -11,79 +11,31 @@ import {
   Calendar,
   CheckCircle,
 } from "lucide-react";
-import { animalsApi, farmersApi, feedsApi, tasksApi } from "../api/client";
-import { type Animal, type Farmer, type Task, TaskStatus } from "../types";
+import { animalsApi, feedsApi, tasksApi } from "../api/client";
+import { type Animal } from "../types";
 import type { Animal as AnimalsTableAnimal } from "../components/animals/AnimalsTable";
+import { useDashboardData } from "../hooks/useDashboardData";
 
 // Modals
 import { AnimalFormModal } from "../components/animals/AnimalFormModal";
 import { FeedAnimalModal } from "../components/feeds/FeedAnimalModal";
 import { TaskFormModal } from "../components/tasks/TaskFormModal";
 
-interface FeedStock {
-  id: number;
-  name: string;
-  quantity: number;
-}
-
-interface FeedingLog {
-  id: number;
-  amount: number;
-  fedAt: string;
-  animal: Animal;
-  feedStock: FeedStock;
-}
-
 export const Dashboard: React.FC = () => {
-  // --- State ---
-  const [animals, setAnimals] = useState<Animal[]>([]);
-  const [farmers, setFarmers] = useState<Farmer[]>([]);
-  const [feeds, setFeeds] = useState<FeedStock[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [logs, setLogs] = useState<FeedingLog[]>([]);
-
-  const [isLoading, setIsLoading] = useState(true);
+  const { animals, farmers, feeds, isLoading, stats, insights, refresh } =
+    useDashboardData();
 
   // Modal Visibility State
   const [showAnimalModal, setShowAnimalModal] = useState(false);
   const [showFeedModal, setShowFeedModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
 
-  // --- Fetch Data ---
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [animalsRes, farmersRes, feedsRes, tasksRes, logsRes] =
-        await Promise.all([
-          animalsApi.getAll(),
-          farmersApi.getAll(),
-          feedsApi.getAllStock(),
-          tasksApi.getAll(),
-          feedsApi.getHistory(),
-        ]);
-
-      setAnimals(animalsRes.data);
-      setFarmers(farmersRes.data);
-      setFeeds(feedsRes.data);
-      setTasks(tasksRes.data);
-      setLogs(logsRes.data);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setTimeout(() => setIsLoading(false), 500);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   // --- Action Handlers ---
   const handleCreateAnimal = async (data: Omit<Animal, "id">) => {
     try {
       await animalsApi.create(data);
       setShowAnimalModal(false);
-      fetchData();
+      refresh();
     } catch (error) {
       console.error("Failed to create animal", error);
     }
@@ -97,7 +49,7 @@ export const Dashboard: React.FC = () => {
     try {
       await feedsApi.feedAnimal(data);
       setShowFeedModal(false);
-      fetchData();
+      refresh();
     } catch (error) {
       console.error("Failed to feed animal", error);
     }
@@ -107,91 +59,13 @@ export const Dashboard: React.FC = () => {
     try {
       await tasksApi.create(data);
       setShowTaskModal(false);
-      fetchData();
+      refresh();
     } catch (error) {
       console.error("Failed to create task", error);
     }
   };
 
-  // --- Metrics & Insights Calculation ---
-  const stats = useMemo(() => {
-    const totalFeedQuantity = feeds.reduce(
-      (acc, item) => acc + item.quantity,
-      0,
-    );
-    return {
-      animals: animals.length,
-      farmers: farmers.length,
-      feeds: totalFeedQuantity,
-      tasks: tasks.filter((t) => t.status !== TaskStatus.COMPLETED).length,
-    };
-  }, [animals, farmers, feeds, tasks]);
-
-  const insights = useMemo(() => {
-    // Low Stock Alerts (< 50kg)
-    const lowStock = feeds.filter((f) => f.quantity < 50);
-
-    // Overdue Tasks (Pending or In Progress + Due Date is in the past)
-    const now = new Date();
-    const allOverdue = tasks.filter((t) => {
-      if (t.status === TaskStatus.COMPLETED || !t.dueDate) return false;
-      return new Date(t.dueDate) < now;
-    });
-
-    const overdueCount = allOverdue.length;
-
-    // Sort oldest due date first (most overdue)
-    const overdueTasks = allOverdue
-      .sort(
-        (a, b) =>
-          new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime(),
-      )
-      .slice(0, 3);
-
-    // Trends (from recent logs)
-    const animalConsumption: Record<string, number> = {};
-    const feedUsage: Record<string, number> = {};
-
-    logs.forEach((log) => {
-      if (log.animal) {
-        const name = log.animal.name;
-        animalConsumption[name] = (animalConsumption[name] || 0) + log.amount;
-      }
-      if (log.feedStock) {
-        const name = log.feedStock.name;
-        feedUsage[name] = (feedUsage[name] || 0) + log.amount;
-      }
-    });
-
-    // Most Productive Employee (Most Completed Tasks)
-    const farmerCompletions: Record<string, number> = {};
-    tasks
-      .filter((t) => t.status === TaskStatus.COMPLETED)
-      .forEach((t) => {
-        const name = t.farmer?.name || "Unassigned";
-        farmerCompletions[name] = (farmerCompletions[name] || 0) + 1;
-      });
-
-    const mostFedAnimal = Object.entries(animalConsumption).sort(
-      ([, a], [, b]) => b - a,
-    )[0];
-    const mostUsedFeed = Object.entries(feedUsage).sort(
-      ([, a], [, b]) => b - a,
-    )[0];
-    const topEmployee = Object.entries(farmerCompletions).sort(
-      ([, a], [, b]) => b - a,
-    )[0];
-
-    return {
-      lowStock,
-      overdueTasks,
-      overdueCount,
-      mostFedAnimal,
-      mostUsedFeed,
-      topEmployee,
-    };
-  }, [feeds, tasks, logs]);
-
+  // --- UI Components Data ---
   const statCards = [
     {
       label: "Total Animals",
