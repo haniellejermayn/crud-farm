@@ -16,9 +16,9 @@ export class TasksService {
     const newTask = this.taskRepository.create({
       title: createTaskDto.title,
       dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
+      status: createTaskDto.status,
       farmerId: createTaskDto.farmerId ?? null,
       animalId: createTaskDto.animalId ?? null,
-      // Note: plantId is in DTO but not in your provided entity relation yet
     } as Task);
 
     return this.taskRepository.save(newTask);
@@ -26,7 +26,7 @@ export class TasksService {
 
   findAll() {
     return this.taskRepository.find({
-      relations: ['farmer', 'animal'], // Load relations for the table
+      relations: ['farmer', 'animal'],
       order: { dueDate: 'ASC' },
     });
   }
@@ -42,9 +42,9 @@ export class TasksService {
     const task = await this.findOne(id);
     if (!task) throw new NotFoundException(`Task #${id} not found`);
 
-    // Merge updates
     const updated = this.taskRepository.merge(task, {
       ...updateTaskDto,
+      status: updateTaskDto.status ?? task.status,
       dueDate: updateTaskDto.dueDate
         ? new Date(updateTaskDto.dueDate)
         : task.dueDate,
