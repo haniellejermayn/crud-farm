@@ -23,7 +23,7 @@ export const AnimalFormModal: React.FC<AnimalFormModalProps> = ({
 }) => {
   const [formData, setFormData] = useState(() => initialData ?? INITIAL_STATE);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSubmit(formData);
   };

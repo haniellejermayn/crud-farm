@@ -24,7 +24,7 @@ export const FeedAnimalModal: React.FC<FeedAnimalModalProps> = ({
   const [feedStockId, setFeedStockId] = useState("");
   const [amount, setAmount] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!animalId || !feedStockId || !amount) return;
 

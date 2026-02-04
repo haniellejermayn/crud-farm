@@ -39,7 +39,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
     return INITIAL_STATE;
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const payload = {
       ...formData,
