@@ -8,7 +8,7 @@ import { useDashboardData } from "../hooks/useDashboardData";
 import { DashboardSidebar } from "../components/dashboard/DashboardSidebar";
 import { QuickActions } from "../components/dashboard/QuickActions";
 import { InsightsGrid } from "../components/dashboard/InsightsGrid";
-import { FarmAnalytics } from "../components/dashboard/FarmAnalytics";
+import { ConsumptionAnalytics } from "../components/dashboard/ConsumptionAnalytics";
 
 // Modals
 import { AnimalFormModal } from "../components/animals/AnimalFormModal";
@@ -79,7 +79,7 @@ export const Dashboard: React.FC = () => {
           <InsightsGrid insights={insights} />
 
           {logs.length > 0 && <div className="border-t border-gray-200" />}
-          {logs.length > 0 && <FarmAnalytics logs={logs} />}
+          {logs.length > 0 && <ConsumptionAnalytics logs={logs} />}
         </div>
       </div>
 

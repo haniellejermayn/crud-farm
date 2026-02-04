@@ -9,6 +9,7 @@ interface FeedAnimalModalProps {
     animalId: number;
     feedStockId: number;
     amount: number;
+    fedAt: Date;
   }) => Promise<void>;
   animals: Animal[];
   stocks: FeedStock[];
@@ -23,15 +24,17 @@ export const FeedAnimalModal: React.FC<FeedAnimalModalProps> = ({
   const [animalId, setAnimalId] = useState("");
   const [feedStockId, setFeedStockId] = useState("");
   const [amount, setAmount] = useState("");
+  const [fedAt, setFedAt] = useState("");
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!animalId || !feedStockId || !amount) return;
+    if (!animalId || !feedStockId || !amount || !fedAt) return;
 
     onSubmit({
       animalId: Number(animalId),
       feedStockId: Number(feedStockId),
       amount: Number(amount),
+      fedAt: fedAt ? new Date(fedAt) : new Date(),
     });
   };
 
@@ -106,6 +109,18 @@ export const FeedAnimalModal: React.FC<FeedAnimalModalProps> = ({
                 }
               }}
               className="w-full p-1 rounded-lg border-gray-300 focus:ring-sage-500 focus:border-sage-500 shadow-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fed At (Date & Time)
+            </label>
+            <input
+              required
+              type="datetime-local"
+              value={fedAt}
+              onChange={(e) => setFedAt(e.target.value)}
+              className="w-full p-2 rounded-lg border border-gray-300 focus:border-sage-500 focus:ring-1 focus:ring-sage-500 shadow-sm"
             />
           </div>
           <div className="pt-4 flex gap-3">

@@ -72,16 +72,16 @@ export class FeedsService {
       amount: dto.amount,
       animalId: dto.animalId,
       feedStockId: dto.feedStockId,
+      fedAt: dto.fedAt,
     });
 
     return this.logRepo.save(log);
   }
 
-  getRecentLogs() {
+  getLogs() {
     return this.logRepo.find({
       relations: ['animal', 'feedStock'],
       order: { fedAt: 'DESC' },
-      take: 20,
     });
   }
 

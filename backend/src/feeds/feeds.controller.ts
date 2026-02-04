@@ -44,7 +44,7 @@ export class FeedsController {
 
   @Get('history')
   getHistory() {
-    return this.feedsService.getRecentLogs();
+    return this.feedsService.getLogs();
   }
 
   @Delete('history/:id')

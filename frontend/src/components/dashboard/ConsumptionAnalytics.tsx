@@ -14,7 +14,6 @@ import {
 } from "recharts";
 import { Card } from "../common/Card";
 
-// Define the shape of the data we expect
 interface Props {
   logs: {
     id: number;
@@ -26,10 +25,18 @@ interface Props {
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
-export const FarmAnalytics = ({ logs }: Props) => {
-  // 1. Calculate Daily Consumption (for Area Chart)
+export const ConsumptionAnalytics = ({ logs }: Props) => {
+  // --- Logic for Line Chart (Last 7 Days) ---
   const dailyData = useMemo(() => {
-    // Group by Date
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    });
+
     const grouped = logs.reduce(
       (acc, log) => {
         const date = new Date(log.fedAt).toLocaleDateString("en-US", {
@@ -42,17 +49,26 @@ export const FarmAnalytics = ({ logs }: Props) => {
       {} as Record<string, number>,
     );
 
-    // Convert to Array and sort by date (simplified for demo)
-    return Object.entries(grouped).map(([date, amount]) => ({
+    return last7Days.map((date) => ({
       date,
-      amount,
+      amount: grouped[date] || 0,
     }));
   }, [logs]);
 
-  // 2. Calculate Feed Distribution (for Pie Chart)
+  // --- Logic for Pie Chart (Last 7 Days ONLY) ---
   const feedTypeData = useMemo(() => {
+    // Define the cutoff (Start of 6 days ago to cover full 7 day window including today)
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 7);
+    // Note: You can tweak this to -6 or set hours to 00:00:00 depending on exact needs
+
     const grouped = logs.reduce(
       (acc, log) => {
+        const logDate = new Date(log.fedAt);
+
+        // Filter out old logs
+        if (logDate < cutoffDate) return acc;
+
         const name = log.feedStock.name;
         acc[name] = (acc[name] || 0) + log.amount;
         return acc;
@@ -69,14 +85,14 @@ export const FarmAnalytics = ({ logs }: Props) => {
   return (
     <div className="space-y-6">
       <h3 className="text-sm font-semibold text-sage-500 uppercase tracking-wider">
-        Analytics & Trends
+        Consumption Analytics
       </h3>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* CHART 1: Consumption Trend */}
         <Card className="p-6 border-gray-200 flex flex-col">
           <h4 className="font-semibold text-gray-900 mb-4">
-            Daily Feed Consumption (kg)
+            Feed Consumption (kg) in the Last 7 Days
           </h4>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -127,38 +143,46 @@ export const FarmAnalytics = ({ logs }: Props) => {
         {/* CHART 2: Feed Distribution */}
         <Card className="p-6 border-gray-200 flex flex-col">
           <h4 className="font-semibold text-gray-900 mb-4">
-            Feed Type Distribution (kg)
+            Feed Consumption (kg) by Type in the Last 7 Days
           </h4>
           <div className="h-64 w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={feedTypeData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {feedTypeData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend
-                  verticalAlign="bottom"
-                  height={36}
-                  iconType="circle"
-                  formatter={(value) => (
-                    <span className="text-gray-600 text-sm ml-1">{value}</span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {feedTypeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={feedTypeData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {feedTypeData.map((_, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    iconType="circle"
+                    formatter={(value) => (
+                      <span className="text-gray-600 text-sm ml-1">
+                        {value}
+                      </span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-gray-400 text-sm italic">
+                No feeding data in the last 7 days.
+              </div>
+            )}
           </div>
         </Card>
       </div>

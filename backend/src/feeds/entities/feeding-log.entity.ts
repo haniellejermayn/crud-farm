@@ -3,7 +3,6 @@ import {
   Column,
   PrimaryGeneratedColumn,
   ManyToOne,
-  CreateDateColumn,
   JoinColumn,
 } from 'typeorm';
 import { Animal } from '../../animals/entities/animal.entity';
@@ -17,7 +16,7 @@ export class FeedingLog {
   @Column('float')
   amount: number;
 
-  @CreateDateColumn()
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fedAt: Date;
 
   @Column()

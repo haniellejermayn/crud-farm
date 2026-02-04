@@ -66,7 +66,6 @@ export const FeedsPage: React.FC = () => {
         fetchData();
       } catch (error) {
         console.error("Failed to delete stock", error);
-
         if (axios.isAxiosError(error) && error.response?.status === 409) {
           alert(
             "Cannot delete this feed because it has been used in feeding logs.\n\nPlease remove the associated feeding history first.",
@@ -119,8 +118,8 @@ export const FeedsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-2 max-w-7xl mx-auto space-y-6 h-screen flex flex-col overflow-hidden">
-      {/* Header */}
+    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-6 overflow-hidden">
+      {/* Header Section */}
       <div className="flex-shrink-0">
         <PageHeader
           title="Feed Management"
@@ -144,10 +143,10 @@ export const FeedsPage: React.FC = () => {
         <div className="border-t border-gray-200 mt-6" />
       </div>
 
-      {/* Main Content Grid (Takes remaining height) */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-grow overflow-hidden pb-6">
-        {/* Left: Inventory*/}
-        <div className="lg:col-span-2 h-full">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-grow overflow-hidden pb-1 min-h-0">
+        {/* Left: Inventory Table Container */}
+        <div className="lg:col-span-2 h-full min-h-0">
           <FeedStockTable
             stock={stock}
             isLoading={isLoading}
@@ -156,8 +155,8 @@ export const FeedsPage: React.FC = () => {
           />
         </div>
 
-        {/* Right: History */}
-        <div className="lg:col-span-3 h-full">
+        {/* Right: History Table Container */}
+        <div className="lg:col-span-3 h-full min-h-0">
           <FeedingLogTable
             logs={logs}
             isLoading={isLoading}
