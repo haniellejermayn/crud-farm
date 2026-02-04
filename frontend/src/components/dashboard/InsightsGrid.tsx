@@ -31,7 +31,7 @@ export const InsightsGrid = ({ insights }: { insights: InsightsData }) => {
       <h3 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-4">
         Farm Insights
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Card 1: Overdue Tasks */}
         <Card
           className={`p-0 overflow-hidden border-y border-r border-gray-200 shadow-sm h-full flex flex-col ${
