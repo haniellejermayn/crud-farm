@@ -128,15 +128,13 @@ export const Dashboard: React.FC = () => {
   }, [animals, farmers, feeds, tasks]);
 
   const insights = useMemo(() => {
-    // 1. Low Stock Alerts (< 50kg)
+    // Low Stock Alerts (< 50kg)
     const lowStock = feeds.filter((f) => f.quantity < 50);
 
-    // 2. Overdue Tasks (Pending + Due Date is in the past)
+    // Overdue Tasks (Pending or In Progress + Due Date is in the past)
     const now = new Date();
     const allOverdue = tasks.filter((t) => {
-      // Must be pending and have a due date
       if (t.status === TaskStatus.COMPLETED || !t.dueDate) return false;
-      // Check if due date is before now
       return new Date(t.dueDate) < now;
     });
 
@@ -150,7 +148,7 @@ export const Dashboard: React.FC = () => {
       )
       .slice(0, 3);
 
-    // 3. Trends (from recent logs)
+    // Trends (from recent logs)
     const animalConsumption: Record<string, number> = {};
     const feedUsage: Record<string, number> = {};
 
@@ -165,7 +163,7 @@ export const Dashboard: React.FC = () => {
       }
     });
 
-    // 4. Most Productive Employee (Most Completed Tasks)
+    // Most Productive Employee (Most Completed Tasks)
     const farmerCompletions: Record<string, number> = {};
     tasks
       .filter((t) => t.status === TaskStatus.COMPLETED)
@@ -299,7 +297,7 @@ export const Dashboard: React.FC = () => {
             <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span className="text-xs text-sage-600 font-medium">
-                System Online
+                Created by Hanielle Chua
               </span>
             </div>
           </div>
