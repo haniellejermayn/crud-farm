@@ -211,7 +211,7 @@ export const Dashboard: React.FC = () => {
       icon: Package,
     },
     {
-      label: "Pending Tasks",
+      label: "Incomplete Tasks",
       value: stats.tasks,
       icon: ClipboardList,
     },
@@ -454,7 +454,7 @@ export const Dashboard: React.FC = () => {
                 </Card>
 
                 {/* Top Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 flex-1">
                   {/* Top Eater */}
                   <Card className="p-4 border-gray-200 bg-sage-50/30 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-2">
