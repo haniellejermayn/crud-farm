@@ -33,19 +33,19 @@ export const FeedingLogTable: React.FC<FeedingLogTableProps> = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date | Time
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Animal
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-full">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-full">
                 Feed
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Amount
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 Actions
               </th>
             </tr>
@@ -56,7 +56,7 @@ export const FeedingLogTable: React.FC<FeedingLogTableProps> = ({
                 .fill(0)
                 .map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={5} className="px-6 py-4">
+                    <td colSpan={5} className="px-4 py-4">
                       <div className="h-4 bg-gray-100 rounded animate-pulse" />
                     </td>
                   </tr>
@@ -65,7 +65,7 @@ export const FeedingLogTable: React.FC<FeedingLogTableProps> = ({
               <tr>
                 <td
                   colSpan={5}
-                  className="px-6 py-12 text-center text-gray-500 text-sm"
+                  className="px-4 py-12 text-center text-gray-500 text-sm"
                 >
                   No feeding history yet.
                 </td>
@@ -76,7 +76,7 @@ export const FeedingLogTable: React.FC<FeedingLogTableProps> = ({
                   key={log.id}
                   className="hover:bg-sage-50/30 transition-colors"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                  <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-500">
                     <div className="flex items-center gap-2">
                       <CalendarDays className="h-3 w-3 text-gray-400" />
                       {new Date(log.fedAt).toLocaleDateString()}
@@ -87,19 +87,19 @@ export const FeedingLogTable: React.FC<FeedingLogTableProps> = ({
                       })}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className="font-medium">{log.animal?.name}</span>
                     <span className="text-xs text-gray-500 ml-1">
                       ({log.animal?.type})
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
                     {log.feedStock?.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
                     -{log.amount} kg
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="px-4 py-4 whitespace-nowrap text-right">
                     <button
                       onClick={() => onDelete(log.id)}
                       className="text-gray-400 hover:text-red-500 transition-colors"
